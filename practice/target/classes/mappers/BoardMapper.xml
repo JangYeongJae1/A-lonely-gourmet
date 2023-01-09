@@ -1,0 +1,167 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ 
+<mapper namespace="spring.practice.mapper.boardMapper">
+	
+	<!-- 글목록보기 -->
+  	<select id="list" parameterType="searchVo" resultType="boardVo">
+  		select bidx
+  			,  title
+  			,  nickname
+  			,  category
+  			,  hit
+  			,  likeCnt
+  			,  wdate
+  		 from  boardtb
+		<if test="searchType == 'title'">
+			where title like '%'||#{searchVal}||'%'
+		</if>
+		<if test="searchType == 'nickname'">
+			where nickname like '%'||#{searchVal}||'%'
+		</if>
+		<if test="searchType == 'contents'">
+			where contents like '%'||#{searchVal}||'%'
+		</if>
+			order by bidx desc
+  	</select>
+  	
+  	<!-- 글쓰기  -->
+  	<insert id="write" parameterType="boardVo">
+  		insert into boardtb(
+  				bidx
+  			,	originbidx
+  			,	depth
+  			,	lvl
+  			,	title
+  			,	contents
+  			,	nickname
+  			,	category
+  			,	hit
+  			,	likeCnt
+  			,	midx
+  			,	filename
+  			,	wdate
+  			,	delyn
+  		)values(
+  				bidx_seq.nextval
+  			,	bidx_seq.nextval
+  			,	#{depth}
+  			,	#{lvl}
+  			,	#{title}
+  			,	#{contents}
+  			,	#{nickname}
+  			,	#{category}
+  			,	#{hit}
+  			,	#{likeCnt}
+  			,	#{midx}
+  			,	#{filename}
+  			,	sysdate
+  			,	'N'
+  		)
+  	</insert>
+	
+	<!-- 글번호 선택하기 -->
+	<select id="selectByBidx" parameterType="int" resultType="boardVo">
+		select  bidx
+			,	title
+			, 	contents
+  			,  	nickname
+  			,  	category
+  			,  	hit
+  			,  	likeCnt
+  			,  	wdate
+  			,  	midx
+  		 from  	boardtb
+  		where  	bidx = #{bidx}
+	</select>
+	
+	<!-- 조회수  -->
+	<update id="hitCnt" parameterType="int">
+		update boardtb
+		set hit = hit+1
+		where bidx = #{bidx}
+	</update>
+	
+	<!-- 글 수정하기 -->
+	<update id="updateByBidx" parameterType="boardVo">
+		update boardtb
+		   set title = #{title}
+			,  contents = #{contents}
+			,  category = #{category}
+		where  bidx = #{bidx}
+	</update>
+	
+	<!-- 글 삭제하기 -->
+	<delete id="deleteByBidx" parameterType="int">
+		delete 
+		 from boardtb
+		 where bidx = #{bidx}
+	</delete>
+	
+	<!-- 좋아요 클릭시 boardtb의 likeCnt 업데이트 -->
+	<update id="updateByLikeCnt" parameterType="int">
+		update boardtb
+		   set likeCnt = likeCnt+1
+		 where bidx = #{bidx}
+	</update>	
+	
+	<!-- 좋아요 클릭시 liketb에 insert -->
+	<insert id="insertLiketb" parameterType="likeVo">
+		insert into liketb(
+				lidx
+			,	id
+			,	bidx
+		)values(
+				lidx_seq.nextval
+			,	#{id}
+			,	#{bidx}
+		)
+	</insert>
+	
+	<!-- 좋아요 클릭시 likeCheck를 1로 만들어서 중복 방지 -->
+	<update id="updateByLikeCheck" parameterType="likeVo">
+		update liketb
+		   set likeCheck = 1
+		 where bidx = #{bidx}
+		   and id = #{id}
+ 	</update>
+ 	
+ 	<!-- 게시글 추천 중복방지 -->
+ 	<select id="likeCheck" parameterType="likeVo" resultType="int">
+ 		select count(*)
+ 		  from liketb
+ 		 where bidx = #{bidx}
+ 		   and id = #{id}
+ 	</select>
+ 	
+ 	<!-- 댓글 보기 -->
+ 	<select id="replyList" parameterType="int" resultType="replyVo">
+ 		select ridx
+ 			,  content
+ 			,  wdate
+ 			,  writer
+ 			,  bidx
+ 		 from  replytb
+ 		where  bidx = #{bidx}
+ 		order by ridx desc
+ 	</select>
+ 	
+  	<!-- 댓글 작성시 replytb에 insert -->
+ 	<insert id="insertReplytb" parameterType="replyVo">
+ 		insert into replytb(
+ 				ridx
+ 			,	content
+ 			,	wdate
+ 			,	writer
+ 			,	bidx
+ 		)values(
+ 				ridx_seq.nextval
+ 			,	#{content}
+ 			,	sysdate
+ 			,	#{writer}
+ 			,	#{bidx}
+ 		)
+ 	</insert>
+</mapper>
